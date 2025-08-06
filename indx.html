@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ETH_OS FLywheel Runner</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      /* background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e); */
+      background:url(bg.png);
+      background-size: contain;
+      background-size: 400% 400%;
+      animation: fluxBackground 15s ease infinite;
+      color: #00ff88;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .bg-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0.1;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    /* @keyframes fluxBackground {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes float {
+      0% { 
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { 
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+      }
+    } */
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      z-index: 10;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 5px;
+      background: #FFFFFF;
+      /* background: linear-gradient(45deg, #00ff88, #00ccff, #ff6b9d); */
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #0a0a0a;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 1200px;
+      width: 100%;
+      padding: 0 20px;
+    }
+
+    .experiment-info {
+      background: rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(37, 97, 69, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .warning {
+      background: rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(73, 25, 41, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+      backdrop-filter: blur(10px);
+      color: #2e2427;
+    }
+
+    .game-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
+    .modules-section, .assembly-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      color: #ffffff;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .modules {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .assembly {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .module {
+      width: 160px;
+      height: 100px;
+      /* background: url(eth.jpg); */
+      background: linear-gradient(135deg, #2a4a6b, #1e3a52);
+      border: 2px solid rgba(0, 255, 136, 0.4);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 11px;
+      font-weight: bold;
+      cursor: grab;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .module-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0.7;
+      z-index: 1;
+    }
+
+    .module-text {
+      position: relative;
+      z-index: 2;
+      font-size: 10px;
+      line-height: 1.2;
+      color: white;
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .module::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.2), transparent);
+      transition: left 0.6s;
+      z-index: 3;
+    }
+
+    .module:hover::before {
+      left: 100%;
+    }
+
+    .module:hover {
+      transform: translateY(-8px) scale(1.05);
+      border-color: #00ff88;
+      box-shadow: 0 15px 40px rgba(0, 255, 136, 0.4);
+    }
+
+    .module:active {
+      cursor: grabbing;
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    .module.dragging {
+      opacity: 0.8;
+      transform: scale(1.15) rotate(8deg);
+      z-index: 1000;
+      box-shadow: 0 20px 50px rgba(0, 255, 136, 0.6);
+    }
+
+    .slot {
+      width: 160px;
+      height: 100px;
+      background:url(eth2.png);
+      background-size: fill;
+      /* background: rgba(255, 255, 255, 0.03); */
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 10px;
+      transition: all 0.3s ease;
+      position: relative;
+      color: #666;
+    }
+
+    .slot-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0.7;
+      z-index: 1;
+    }
+
+    .slot-text {
+      position: relative;
+      z-index: 2;
+      font-size: 16px;
+      color: rgb(0, 0, 0);
+      text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    }
+
+    .slot.drag-over {
+      border-color: #00ff88;
+      background: rgba(0, 255, 136, 0.1);
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+    }
+
+    .slot.filled {
+      background: linear-gradient(135deg, #00ff88, #00ccff);
+      color: #0a0a0a;
+      border-style: solid;
+      border-color: #00ff88;
+      font-weight: bold;
+      animation: slotFill 0.6s ease-out;
+    }
+
+    .slot.filled .slot-text {
+      color: #0a0a0a;
+      text-shadow: none;
+    }
+
+    @keyframes slotFill {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .chain-visualization {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    #flywheel {
+      width: 200px;
+      height: 200px;
+      border: 6px solid #666;
+      border-radius: 50%;
+      position: relative;
+      background: url(eth.jpg);
+      background-size: cover;
+      /* background: radial-gradient(circle, rgba(102, 102, 102, 0.1), transparent); */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      text-align: center;
+      transition: all 0.5s ease;
+      color: whitesmoke;
+    }
+
+    #flywheel.spinning {
+      border-color: #00ff88;
+      animation: spin 1s linear infinite;
+      background: url(eth.jpg);
+      background-size: cover;
+      box-shadow: 0 0 50px rgba(0, 255, 136, 0.8);
+    }
+
+    #flywheel::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #ff6b9d;
+      border-radius: 50%;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 20px #ff6b9d;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .status-message {
+      margin-top: 15px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .status-success {
+      color: #00ff88;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .status-error {
+      color: #ff6b9d;
+      background: rgba(255, 107, 157, 0.1);
+      border: 1px solid rgba(255, 107, 157, 0.3);
+    }
+
+    .progress-bar {
+      width: 300px;
+      height: 8px;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff88, #00ccff);
+      width: 0%;
+      transition: width 0.8s ease;
+      border-radius: 4px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #00ff88, #00ccff);
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #0a0a0a;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .secondary-btn {
+      background: linear-gradient(135deg, #00ff88, #00ccff);
+      color: #000000 !important;
+      border: 1px solid rgba(0, 204, 255, 0.4) !important;
+    }
+
+    .danger-btn {
+      background: rgb(109, 8, 8);
+      /* background: linear-gradient(135deg, rgba(255, 107, 157, 0.2), rgba(255, 107, 157, 0.3)) !important; */
+      color: #ffffff;
+      border: 1px solid rgba(255, 107, 157, 0.4) !important;
+    }
+
+    .funky-messages {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 107, 157, 0.95);
+      color: white;
+      padding: 30px;
+      border-radius: 15px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      z-index: 10000;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(255, 107, 157, 0.5);
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 20%, 40%, 60%, 80%, 100% { transform: translate(-50%, -50%) rotateZ(0deg); }
+      10%, 30%, 50%, 70%, 90% { transform: translate(-50%, -50%) rotateZ(-2deg); }
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .game-area {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .modules {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .assembly {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .module, .slot {
+        width: 140px;
+        height: 90px;
+        font-size: 10px;
+      }
+
+      #flywheel {
+        width: 160px;
+        height: 160px;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      button {
+        width: 200px;
+        padding: 14px 20px;
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .modules, .assembly {
+        grid-template-columns: 1fr;
+        max-width: 200px;
+      }
+
+      .module, .slot {
+        width: 180px;
+        height: 85px;
+      }
+
+      #flywheel {
+        width: 140px;
+        height: 140px;
+      }
+
+      .progress-bar {
+        width: 250px;
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .module:hover::before {
+        left: 0;
+      }
+      
+      .module:active {
+        transform: scale(1.1);
+      }
+    }
+    .user{
+      color: whitesmoke;
+    }
+
+    .user a{
+      text-decoration: none;
+      color: #1e3a52;
+    }
+
+  .user a:hover{
+    font-size: 20px;
+    color: #0a0a0a;
+  }
+  </style>
+</head>
+<body>
+  <div class="bg-overlay" id="bgOverlay"></div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>Ethereum_OS Flywheel Runner</h1>
+      <div class="subtitle">DeFi Mechanism Assembly • Find The Original 7</div>
+       <div class="user">Made with love by <a href="https://x.com/0xTowhid" target="_blank">0xTowhid</a></div>
+    </div>
+
+    <div class="experiment-info">
+      🎯 <strong>Mission:</strong> Find and assemble the original 7 DeFi mechanisms to activate the recursive flywheel of ETH_OS.
+      Wrong combinations will trigger the wrong protocol. 
+    </div>
+
+    <div class="warning">
+      ⚠️ Only the TRUE 7 mechanisms will spin the flywheel of Ethereum OS. Choose wisely...
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress"></div>
+    </div>
+
+    <div class="game-area">
+      <div class="modules-section">
+        <div class="section-title">🎲 Available Mechanisms</div>
+        <div class="modules" id="modules"></div>
+      </div>
+
+      <div class="assembly-section">
+        <div class="section-title">⚡ Assembly Matrix</div>
+        <div class="assembly" id="assembly"></div>
+        
+        <div class="chain-visualization">
+          <div id="flywheel">
+            <span id="flywheel-text">FLYWHEEL</span>
+          </div>
+          <div class="status-message" id="statusMessage">Awaiting assembly...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button onclick="resetExperiment()">🔄 Reset</button>
+      <button onclick="randomizeModules()" class="secondary-btn">🎲 Shuffle</button>
+      <button onclick="undoLastMove()" class="secondary-btn" id="undoBtn" disabled>↶ Undo</button>
+      <button onclick="redoLastMove()" class="secondary-btn" id="redoBtn" disabled>↷ Redo</button>
+      <button onclick="revealAnswer()" class="danger-btn">🔍 Reveal Answer</button>
+    </div>
+  </div>
+
+  <div class="funky-messages" id="funkyMessage"></div>
+
+  <script>
+    // Constants
+    const ORIGINAL_MECHANISMS = [
+      "reflections",
+      "auto LP", 
+      "ponzi",
+      "pump",
+      "burn",
+      "reaper",
+      "gamble"
+    ];
+
+    const ADDITIONAL_MECHANISMS = [
+      "staking rewards",
+      "yield farming",
+      "flash loans"
+    ];
+
+    const ALL_MECHANISMS = [...ORIGINAL_MECHANISMS, ...ADDITIONAL_MECHANISMS];
+
+    const FUNKY_MESSAGES = [
+      "🤡 Nice try, but that's not how ETH_OS works!",
+      "💀 The reaper is not pleased with your selection...",
+      "🎰 Wrong combo! The casino always wins!",
+      "🔥 Burn it down and try again!",
+      "💸 Your portfolio just got rekt!",
+      "🦄 Even unicorns can't save this combination!",
+      "⚡ Short circuit detected! Wrong mechanisms!",
+      "🌪️ Chaos protocol activated! Try again!",
+      "🎭 This isn't the degen way!",
+      "🚀 Ansem, we have a problem!"
+    ];
+
+    // Game state
+    let gameState = {
+      selectedMechanisms: [],
+      availableMechanisms: [...ALL_MECHANISMS],
+      isComplete: false,
+      moves: [],
+      redoStack: []
+    };
+
+    // Touch handling for mobile
+    let draggedElement = null;
+    let touchOffset = { x: 0, y: 0 };
+
+    // Create module tiles
+    function createModules() {
+      const container = document.getElementById('modules');
+      container.innerHTML = '';
+      
+      gameState.availableMechanisms.forEach((mechanism, index) => {
+        const div = document.createElement('div');
+        div.className = 'module';
+        div.dataset.mechanism = mechanism;
+        
+        const bg = document.createElement('div');
+        bg.className = 'module-bg';
+        
+        const text = document.createElement('div');
+        text.className = 'module-text';
+        text.textContent = mechanism;
+        
+        div.appendChild(bg);
+        div.appendChild(text);
+        
+        // Desktop drag events
+        div.draggable = true;
+        div.addEventListener('dragstart', (e) => {
+          div.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', mechanism);
+        });
+        div.addEventListener('dragend', () => {
+          div.classList.remove('dragging');
+        });
+
+        // Mobile touch events
+        div.addEventListener('touchstart', handleTouchStart, { passive: false });
+        div.addEventListener('touchmove', handleTouchMove, { passive: false });
+        div.addEventListener('touchend', handleTouchEnd, { passive: false });
+        
+        container.appendChild(div);
+      });
+    }
+
+    // Create assembly slots
+    function createAssemblySlots() {
+      const assembly = document.getElementById('assembly');
+      assembly.innerHTML = '';
+      
+      for (let i = 0; i < 7; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+        slot.dataset.index = i;
+        
+        const bg = document.createElement('div');
+        bg.className = 'slot-bg';
+        
+        const text = document.createElement('div');
+        text.className = 'slot-text';
+        text.textContent = `Slot ${i + 1}`;
+        
+        slot.appendChild(bg);
+        slot.appendChild(text);
+
+        // Desktop drag events
+        slot.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          slot.classList.add('drag-over');
+        });
+
+        slot.addEventListener('dragleave', () => {
+          slot.classList.remove('drag-over');
+        });
+
+        slot.addEventListener('drop', (e) => {
+          e.preventDefault();
+          slot.classList.remove('drag-over');
+          
+          const mechanismName = e.dataTransfer.getData('text/plain');
+          const dragging = document.querySelector(`[data-mechanism="${mechanismName}"]`);
+          
+          if (dragging && !slot.classList.contains('filled')) {
+            fillSlot(slot, mechanismName, dragging);
+          }
+        });
+
+        // Double-click to clear slot
+        slot.addEventListener('dblclick', () => {
+          if (slot.classList.contains('filled')) {
+            clearSlot(slot);
+          }
+        });
+
+        assembly.appendChild(slot);
+      }
+    }
+
+    // Touch event handlers
+    function handleTouchStart(e) {
+      e.preventDefault();
+      draggedElement = e.target.closest('.module');
+      if (draggedElement) {
+        draggedElement.classList.add('dragging');
+        const touch = e.touches[0];
+        const rect = draggedElement.getBoundingClientRect();
+        touchOffset.x = touch.clientX - rect.left;
+        touchOffset.y = touch.clientY - rect.top;
+      }
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      if (draggedElement) {
+        const touch = e.touches[0];
+        draggedElement.style.position = 'fixed';
+        draggedElement.style.left = (touch.clientX - touchOffset.x) + 'px';
+        draggedElement.style.top = (touch.clientY - touchOffset.y) + 'px';
+        draggedElement.style.zIndex = '1000';
+        
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const slot = elementBelow?.closest('.slot');
+        
+        document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
+        if (slot && !slot.classList.contains('filled')) {
+          slot.classList.add('drag-over');
+        }
+      }
+    }
+
+    function handleTouchEnd(e) {
+      e.preventDefault();
+      if (draggedElement) {
+        const touch = e.changedTouches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const slot = elementBelow?.closest('.slot');
+        
+        if (slot && !slot.classList.contains('filled')) {
+          const mechanismName = draggedElement.dataset.mechanism;
+          fillSlot(slot, mechanismName, draggedElement);
+        } else {
+          draggedElement.style.position = '';
+          draggedElement.style.left = '';
+          draggedElement.style.top = '';
+          draggedElement.style.zIndex = '';
+        }
+        
+        draggedElement.classList.remove('dragging');
+        document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
+        draggedElement = null;
+      }
+    }
+
+    // Fill a slot with a mechanism
+    function fillSlot(slot, mechanismName, moduleElement) {
+      gameState.moves.push({
+        type: 'fill',
+        slotIndex: parseInt(slot.dataset.index),
+        mechanism: mechanismName
+      });
+      gameState.redoStack = [];
+      
+      slot.querySelector('.slot-text').textContent = mechanismName;
+      slot.classList.add('filled');
+      slot.dataset.mechanism = mechanismName;
+      gameState.selectedMechanisms.push(mechanismName);
+      
+      gameState.availableMechanisms = gameState.availableMechanisms.filter(m => m !== mechanismName);
+      moduleElement.remove();
+      
+      updateProgress();
+      updateButtons();
+      checkCompletion();
+    }
+
+    // Clear a slot
+    function clearSlot(slot) {
+      const mechanismName = slot.dataset.mechanism;
+      if (!mechanismName) return;
+
+      gameState.moves.push({
+        type: 'clear',
+        slotIndex: parseInt(slot.dataset.index),
+        mechanism: mechanismName
+      });
+      gameState.redoStack = [];
+
+      gameState.selectedMechanisms = gameState.selectedMechanisms.filter(m => m !== mechanismName);
+      gameState.availableMechanisms.push(mechanismName);
+      
+      slot.classList.remove('filled');
+      slot.dataset.mechanism = '';
+      slot.querySelector('.slot-text').textContent = `Slot ${parseInt(slot.dataset.index) + 1}`;
+      
+      createModules();
+      updateProgress();
+      updateButtons();
+      checkCompletion();
+    }
+
+    // Update progress bar
+    function updateProgress() {
+      const progress = (gameState.selectedMechanisms.length / 7) * 100;
+      document.getElementById('progress').style.width = progress + '%';
+    }
+
+    // Update button states
+    function updateButtons() {
+      document.getElementById('undoBtn').disabled = gameState.moves.length === 0;
+      document.getElementById('redoBtn').disabled = gameState.redoStack.length === 0;
+    }
+
+    // Undo last move
+    function undoLastMove() {
+      if (gameState.moves.length === 0) return;
+      
+      const lastMove = gameState.moves.pop();
+      gameState.redoStack.push(lastMove);
+      
+      const slot = document.querySelector(`[data-index="${lastMove.slotIndex}"]`);
+      
+      if (lastMove.type === 'fill') {
+        gameState.selectedMechanisms = gameState.selectedMechanisms.filter(m => m !== lastMove.mechanism);
+        gameState.availableMechanisms.push(lastMove.mechanism);
+        
+        slot.classList.remove('filled');
+        slot.dataset.mechanism = '';
+        slot.querySelector('.slot-text').textContent = `Slot ${lastMove.slotIndex + 1}`;
+        
+        createModules();
+      } else if (lastMove.type === 'clear') {
+        gameState.selectedMechanisms.push(lastMove.mechanism);
+        gameState.availableMechanisms = gameState.availableMechanisms.filter(m => m !== lastMove.mechanism);
+        
+        slot.classList.add('filled');
+        slot.dataset.mechanism = lastMove.mechanism;
+        slot.querySelector('.slot-text').textContent = lastMove.mechanism;
+        
+        createModules();
+      }
+      
+      updateProgress();
+      updateButtons();
+      checkCompletion();
+    }
+
+    // Redo last undone move
+    function redoLastMove() {
+      if (gameState.redoStack.length === 0) return;
+      
+      const moveToRedo = gameState.redoStack.pop();
+      gameState.moves.push(moveToRedo);
+      
+      const slot = document.querySelector(`[data-index="${moveToRedo.slotIndex}"]`);
+      
+      if (moveToRedo.type === 'fill') {
+        gameState.selectedMechanisms.push(moveToRedo.mechanism);
+        gameState.availableMechanisms = gameState.availableMechanisms.filter(m => m !== moveToRedo.mechanism);
+        
+        slot.classList.add('filled');
+        slot.dataset.mechanism = moveToRedo.mechanism;
+        slot.querySelector('.slot-text').textContent = moveToRedo.mechanism;
+        
+        createModules();
+      } else if (moveToRedo.type === 'clear') {
+        gameState.selectedMechanisms = gameState.selectedMechanisms.filter(m => m !== moveToRedo.mechanism);
+        gameState.availableMechanisms.push(moveToRedo.mechanism);
+
+        slot.classList.remove('filled');
+        slot.dataset.mechanism = '';
+        slot.querySelector('.slot-text').textContent = `Slot ${moveToRedo.slotIndex + 1}`;
+        
+        createModules();
+      }
+      
+      updateProgress();
+      updateButtons();
+      checkCompletion();
+    }
+
+    // Check if game is complete
+    function checkCompletion() {
+      const statusMessage = document.getElementById('statusMessage');
+      const flywheel = document.getElementById('flywheel');
+      
+      if (gameState.selectedMechanisms.length === 7) {
+        const isCorrect = gameState.selectedMechanisms.every(mechanism => 
+          ORIGINAL_MECHANISMS.includes(mechanism)
+        );
+        
+        if (isCorrect) {
+          gameState.isComplete = true;
+          flywheel.classList.add('spinning');
+          statusMessage.textContent = '🎉 FLYWHEEL ACTIVATED! The original 7 mechanisms are assembled!';
+          statusMessage.className = 'status-message status-success';
+        } else {
+          showFunkyMessage();
+          flywheel.classList.remove('spinning');
+          statusMessage.textContent = '💀 Wrong combination! The flywheel rejects your assembly...';
+          statusMessage.className = 'status-message status-error';
+        }
+      } else {
+        flywheel.classList.remove('spinning');
+        statusMessage.textContent = `Awaiting assembly... (${gameState.selectedMechanisms.length}/7)`;
+        statusMessage.className = 'status-message';
+      }
+    }
+
+    // Show funky error message
+    function showFunkyMessage() {
+      const funkyDiv = document.getElementById('funkyMessage');
+      const randomMessage = FUNKY_MESSAGES[Math.floor(Math.random() * FUNKY_MESSAGES.length)];
+      
+      funkyDiv.textContent = randomMessage;
+      funkyDiv.style.display = 'block';
+      
+      setTimeout(() => {
+        funkyDiv.style.display = 'none';
+      }, 3000);
+    }
+
+    // Randomize module order
+    function randomizeModules() {
+      gameState.availableMechanisms = [...ALL_MECHANISMS].sort(() => Math.random() - 0.5);
+      createModules();
+    }
+
+    // Reveal the answer
+    function revealAnswer() {
+      const statusMessage = document.getElementById('statusMessage');
+      statusMessage.innerHTML = `
+        🔍 <strong>The Original 7:</strong><br>
+        ${ORIGINAL_MECHANISMS.join(' • ')}
+      `;
+      statusMessage.className = 'status-message status-success';
+      
+      setTimeout(() => {
+        statusMessage.textContent = 'Awaiting assembly...';
+        statusMessage.className = 'status-message';
+      }, 5000);
+    }
+
+    // Reset the game
+    function resetExperiment() {
+      gameState = {
+        selectedMechanisms: [],
+        availableMechanisms: [...ALL_MECHANISMS].sort(() => Math.random() - 0.5),
+        isComplete: false,
+        moves: [],
+        redoStack: []
+      };
+      
+      createModules();
+      createAssemblySlots();
+      
+      document.getElementById('statusMessage').textContent = 'Awaiting assembly...';
+      document.getElementById('statusMessage').className = 'status-message';
+      document.getElementById('progress').style.width = '0%';
+      document.getElementById('flywheel').classList.remove('spinning');
+      
+      updateButtons();
+    }
+
+    // Background upload functionality
+    function setupBackgroundUpload() {
+      const imageInput = document.createElement('input');
+      imageInput.type = 'file';
+      imageInput.accept = 'image/*';
+      imageInput.style.display = 'none';
+      imageInput.id = 'bgUpload';
+      imageInput.onchange = handleBackgroundUpload;
+      document.body.appendChild(imageInput);
+      
+      document.addEventListener('dblclick', (e) => {
+        if (e.target === document.body || e.target.classList.contains('bg-overlay')) {
+          document.getElementById('bgUpload').click();
+        }
+      });
+    }
+
+    function handleBackgroundUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('bgOverlay').style.backgroundImage = `url(${e.target.result})`;
+          document.getElementById('bgOverlay').style.opacity = '0.2';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'r' && e.ctrlKey) {
+        e.preventDefault();
+        resetExperiment();
+      }
+      if (e.key === 's' && e.ctrlKey) {
+        e.preventDefault();
+        randomizeModules();
+      }
+      if (e.key === 'z' && e.ctrlKey && !e.shiftKey) {
+        e.preventDefault();
+        undoLastMove();
+      }
+      if (e.key === 'z' && e.ctrlKey && e.shiftKey) {
+        e.preventDefault();
+        redoLastMove();
+      }
+      if (e.key === 'y' && e.ctrlKey) {
+        e.preventDefault();
+        redoLastMove();
+      }
+    });
+
+    // Create floating elements
+    function createFloatingElements() {
+      const container = document.body;
+      for (let i = 0; i < 15; i++) {
+        const element = document.createElement('div');
+        element.style.cssText = `
+          position: fixed;
+          width: 4px;
+          height: 4px;
+          background: rgba(0, 255, 136, 0.3);
+          border-radius: 50%;
+          pointer-events: none;
+          z-index: -1;
+          left: ${Math.random() * 100}%;
+          top: ${Math.random() * 100}%;
+          animation: float ${5 + Math.random() * 10}s infinite linear;
+        `;
+        container.appendChild(element);
+      }
+    }
+
+    // Konami code easter egg
+    let konamiCode = [];
+    const konami = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+    document.addEventListener('keydown', (e) => {
+      konamiCode.push(e.keyCode);
+      if (konamiCode.length > 10) konamiCode.shift();
+      
+      if (JSON.stringify(konamiCode) === JSON.stringify(konami)) {
+        resetExperiment();
+        
+        setTimeout(() => {
+          const slots = document.querySelectorAll('.slot');
+          ORIGINAL_MECHANISMS.forEach((mechanism, index) => {
+            const moduleElement = document.querySelector(`[data-mechanism="${mechanism}"]`);
+            if (moduleElement && slots[index]) {
+              fillSlot(slots[index], mechanism, moduleElement);
+            }
+          });
+          
+          document.body.style.animation = 'rainbow 3s infinite';
+          const rainbowStyle = document.createElement('style');
+          rainbowStyle.textContent = `
+            @keyframes rainbow {
+              0% { filter: hue-rotate(0deg); }
+              100% { filter: hue-rotate(360deg); }
+            }
+          `;
+          document.head.appendChild(rainbowStyle);
+          
+          setTimeout(() => {
+            document.body.style.animation = '';
+          }, 5000);
+          
+          const message = document.createElement('div');
+          message.innerHTML = '🎉 <strong>AI ACTIVATED!</strong><br>🚀 Auto-solved with original 7!';
+          message.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 255, 136, 0.95);
+            color: black;
+            padding: 25px;
+            border-radius: 12px;
+            font-weight: bold;
+            z-index: 10000;
+            text-align: center;
+            animation: pulse 1s infinite;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.8);
+          `;
+          document.body.appendChild(message);
+          
+          const pulseStyle = document.createElement('style');
+          pulseStyle.textContent = `
+            @keyframes pulse {
+              0% { transform: translate(-50%, -50%) scale(1); }
+              50% { transform: translate(-50%, -50%) scale(1.05); }
+              100% { transform: translate(-50%, -50%) scale(1); }
+            }
+          `;
+          document.head.appendChild(pulseStyle);
+          
+          setTimeout(() => message.remove(), 4000);
+        }, 500);
+      }
+    });
+
+    // Initialize the game
+    function initGame() {
+      setupBackgroundUpload();
+      createFloatingElements();
+      resetExperiment();
+      
+      // Add help tooltip
+      const tooltip = document.createElement('div');
+      tooltip.innerHTML = `
+        <strong>💡 How to play?</strong><br>
+        • Double-click filled slots to clear them<br>
+        • Ctrl+Z: Undo | Ctrl+Y: Redo | Ctrl+R: Reset<br>
+        • Find the original 7 mechanisms to spin the flywheel! 🎯<br>
+        • Try the AI for instant solution! 🎮
+      `;
+      tooltip.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        color: whitesmoke;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 12px;
+        max-width: 280px;
+        z-index: 1000;
+        border: 1px solid rgba(0, 255, 136, 0.3);
+        backdrop-filter: blur(10px);
+      `;
+      document.body.appendChild(tooltip);
+      
+      setTimeout(() => {
+        tooltip.style.opacity = '0';
+        tooltip.style.transition = 'opacity 1s';
+        setTimeout(() => tooltip.remove(), 1000);
+      }, 6000);
+    }
+
+    // Start the game when page loads
+    document.addEventListener('DOMContentLoaded', initGame);
+    
+    // Fallback initialization
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initGame);
+    } else {
+      initGame();
+    }
+  </script>
+</body>
+</html>
