@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ETH_OS FLywheel Runner</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="bg-overlay" id="bgOverlay"></div>
+  
+  <div class="container">
+    <div class="header">
+      <h1>Ethereum_OS Flywheel Runner</h1>
+      <div class="subtitle">DeFi Mechanism Assembly • Find The Original 7</div>
+       <div class="user">Made with love by <a href="https://x.com/0xTowhid" target="_blank">0xTowhid</a></div>
+    </div>
+
+    <div class="experiment-info">
+      🎯 <strong>Mission:</strong> Find and assemble the original 7 DeFi mechanisms to activate the recursive flywheel of ETH_OS.
+      Wrong combinations will trigger the wrong protocol. 
+    </div>
+
+    <div class="warning">
+      ⚠️ Only the TRUE 7 mechanisms will spin the flywheel of Ethereum OS. Choose wisely...
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress"></div>
+    </div>
+
+    <div class="game-area">
+      <div class="modules-section">
+        <div class="section-title">🎲 Available Mechanisms</div>
+        <div class="modules" id="modules"></div>
+      </div>
+
+      <div class="assembly-section">
+        <div class="section-title">⚡ Assembly Matrix</div>
+        <div class="assembly" id="assembly"></div>
+        
+        <div class="chain-visualization">
+          <div id="flywheel">
+            <span id="flywheel-text">FLYWHEEL</span>
+          </div>
+          <div class="status-message" id="statusMessage">Awaiting assembly...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button onclick="resetExperiment()">🔄 Reset</button>
+      <button onclick="randomizeModules()" class="secondary-btn">🎲 Shuffle</button>
+      <button onclick="undoLastMove()" class="secondary-btn" id="undoBtn" disabled>↶ Undo</button>
+      <button onclick="redoLastMove()" class="secondary-btn" id="redoBtn" disabled>↷ Redo</button>
+      <button onclick="revealAnswer()" class="danger-btn">🔍 Reveal Answer</button>
+    </div>
+  </div>
+
+  <div class="funky-messages" id="funkyMessage"></div>
+
+  <script src="index.js">
+   
+  </script>
+</body>
+</html>
